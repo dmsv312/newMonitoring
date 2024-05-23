@@ -3,7 +3,7 @@
 namespace app\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use app\Models\Api\Balance;
+use App\Models\Api\Balance;
 use App\Models\Api\Server;
 use App\Models\Api\Token;
 use App\Models\Api\Transaction;
@@ -13,60 +13,66 @@ use phpseclib3\Net\SSH2;
 
 class TransactionController extends Controller
 {
-    public const ETH_AMOUNT = [0.01, 0.02, 0.03, 0.04, 0.05];
+//    public const ETH_AMOUNT = [0.01, 0.02, 0.03, 0.04, 0.05];
+    public const ETH_AMOUNT = [0.01, 0.02, 0.03];
+    public const TOKEN_IDS = [2, 3];
+
     public static function nextTransaction(): array
     {
         /** @var Transaction $nextTransaction */
-        $nextTransaction = Transaction::orderBy('id', 'DESC')->first();
+        $nextTransaction = Transaction::orderBy('id')->where('is_complete', 0)->first();
         $tokenTo = Token::find($nextTransaction->token_id_to);
         $tokenFrom = Token::find($nextTransaction->token_id_from);
 
         return [
-            'token_contract_from' => $tokenFrom->address,
-            'token_contract_to' => $tokenTo->address,
             'token_id_to' => $tokenTo->id,
             'token_id_from' => $tokenFrom->id,
             'transaction_id' => $nextTransaction->id,
+            'amount' => $nextTransaction->amount,
         ];
     }
 
     public function saveTransaction(Request $request): array
     {
+        $id = intval($request->post()['transaction_id']);
         // Save previous transaction
-        $transaction = Transaction::where(['id' => $request->post()['transaction_id']]);
-        $transaction->hash = floatval($request->post()['hash']);
+        /** @var Transaction $transaction */
+        $transaction = Transaction::find($id);
+        $transaction->hash = '';
         $transaction->is_complete = true;
         $transaction->save();
 
-        // create new Transaction item with is_complete = false and without hash;
-        // ETH token id = 1
-        // USDT token id = 2
-        $nextTransaction = new Transaction();
-        // Next transaction from USDT to ETH
-        if ($request->post()['token_id_from'] == 1) {
-            $nextTransaction->token_id_from = 2;
-            $nextTransaction->token_id_to = 1;
-            $balance = Balance::find(2);
-            $nextTransaction->amount = $balance->amount;
-        }
-        // Next transaction from ETH to USDT
-        else {
-            $nextTransaction->token_id_from = 1;
-            $nextTransaction->token_id_to = 2;
-            $randomAmount = self::ETH_AMOUNT[array_rand(self::ETH_AMOUNT)];
-            $nextTransaction->amount = $randomAmount;
-            // TODO - random stable token, for first - USDT
-        }
-        $nextTransaction->is_complete = false;
+//        // create new Transaction item with is_complete = false and without hash;
+//        // ETH token id = 1
+//        // USDT token id = 2
+//        $nextTransaction = new Transaction();
+//        // Next transaction from USDT to ETH
+//        if ($request->post()['token_id_from'] == 1) {
+//            $nextTransaction->token_id_from = $request->post()['token_id_to'];
+//            $nextTransaction->token_id_to = 1;
+//            // TODO - how to update balance
+//            $nextTransaction->amount = 1;
+//        }
+//        // Next transaction from ETH to USDT
+//        else {
+//            $nextTransaction->token_id_from = 1;
+//            $randomToken = self::TOKEN_IDS[array_rand(self::TOKEN_IDS)];
+//            $nextTransaction->token_id_to = $randomToken;
+//            $randomAmount = self::ETH_AMOUNT[array_rand(self::ETH_AMOUNT)];
+//            $nextTransaction->amount = $randomAmount;
+//            // TODO - random stable token, for first - USDT
+//        }
+//
+//        $nextTransaction->is_complete = false;
+//        $nextTransaction->save();
 
-        return ['data' => 'hello'];
+        return ['result' => 'success'];
     }
 
     public function test(): array
     {
-        $output = [];
-        exec('cd $HOME && cd tstest/build/ && node getBalanceEth.js', $output, $code);
-        return ['result' => $output, 'code' => $code];
+
+        return ['hello' => 'hello'];
     }
 
     public function swap(): array

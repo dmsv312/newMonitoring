@@ -6,6 +6,7 @@ use App\Models\Api\ArchiveNode;
 use App\Models\Api\Exorde;
 use App\Models\Api\Node;
 use App\Models\Api\Server;
+use App\Models\Api\Task;
 use App\Models\Api\Token;
 use App\Models\Api\Transaction;
 use App\Models\User;
@@ -38,52 +39,47 @@ class Swap extends Command
      */
     protected $description = 'Command description';
 
-    public function nextTransaction(): array
-    {
-        $tokens = Token::all();
-        $array = [];
-        /** @var Token $token */
-        foreach ($tokens as $token) {
-            $array [] = $token->address;
-        }
-
-        $index = array_rand($array);
-
-        $token = Token::where(['address' => $array[$index]])->first();
-
-        return [
-            'token_contract_from' => '0x20b28B1e4665FFf290650586ad76E977EAb90c5D',
-            'token_contract_to' => $array[$index],
-            'token_id_to' => $token->id,
-        ];
-    }
     /**
      * Execute the console command.
      *
      */
     public function handle()
     {
-//        $server = Server::find(23);
-//        if (!$server) {
-//            return [];
-//        }
+        /** @var Transaction $nextTransaction */
+        $nextTransaction = Transaction::orderBy('id')->where('is_complete', 0)->first();
+        $output = [];
+
+        // exec("if pgrep 'firefo[x]'; then echo 'OK'; fi", $outpupt);
+
+        // if (isset($output[0])) {
+        //     $nextTransaction->hash = $output[0];
+        // } else {
+        //     $nextTransaction->hash = 'empty';
+        //     exec('cd $HOME/pythontest/ && python3 open_firefox.py');
+        // }
+        
+        exec('cd $HOME/pythontest/ && python3 open_firefox.py');
+        
+        if ($nextTransaction->token_id_from == 1 && $nextTransaction->token_id_to == 2) {
+            exec('cd $HOME/pythontest/ && python3 eth_to_usdc.py', $output);
+            print_r($output);
+        }
+        if ($nextTransaction->token_id_from == 1 && $nextTransaction->token_id_to == 3) {
+            exec('cd $HOME/pythontest/ && python3 eth_to_usdt.py', $output);
+            print_r($output);
+        }
+        if ($nextTransaction->token_id_from == 2 && $nextTransaction->token_id_to == 1) {
+            exec('cd $HOME/pythontest/ && python3 usdc_to_eth.py', $output);
+            print_r($output);
+        }
+        if ($nextTransaction->token_id_from == 3 && $nextTransaction->token_id_to == 1) {
+            exec('cd $HOME/pythontest/ && python3 usdt_to_eth.py', $output);
+            print_r($output);
+        }
 //
-//        $ssh = new SSH2($server->address);
-//        $ssh->login('root', Crypt::decrypt($server->password));
-//        $output = explode("\n", $ssh->exec('cd tstest/build/ && node swap.js'));
-//
-//        $transactionParams = $this->nextTransaction();
-//        $transaction = new Transaction();
-//        $transaction->token_id_from = 2;
-//        $transaction->token_id_to = $transactionParams['token_id_to'];
-//        $transaction->amount = 0.00001;
-//        $transaction->hash = $output[1];
-//        $transaction->save();
-//
-//        return [
-//            'output' => $output[0],
-//            'output2' => $output[1],
-//        ];
+//        /** @var Task $swapTask */
+//        $swapTask = Task::orderBy('id', 'DESC')->where('name', 'swap:cron')->first();
+//        $swapTask->calculateAndSaveNextSwapTime();
     }
 }
 

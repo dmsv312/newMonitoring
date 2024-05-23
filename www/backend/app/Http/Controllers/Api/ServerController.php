@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Api\ArchiveNode;
+use App\Models\Api\Balance;
 use App\Models\Api\Exorde;
 use App\Models\Api\Node;
 use App\Models\Api\Server;
@@ -413,5 +414,45 @@ class ServerController extends Controller
             'previousBlock' => $archiveNode->previous_block,
             'realBlock' => $archiveNode->real_block,
         ];
+    }
+
+    public function balance(): array
+    {
+        $server = Server::find(23);
+        if (!$server) {
+            return [];
+        }
+
+        $ssh = new SSH2($server->address);
+        $ssh->login('root', Crypt::decrypt($server->password));
+        $output = explode("\n", $ssh->exec('cd tstest/build/ && node getBalance.js'));
+
+        $balance = new Balance();
+        $balance->amount = floatval($output[0]);
+        $balance->save();
+
+        return [
+            'output' => $balance->amount,
+        ];
+    }
+
+    public function balancePost(\Illuminate\Http\Request $request): array
+    {
+        $balance = new Balance();
+        $balance->amount = floatval($request->post()['amount']);
+        $balance->save();
+        return ['data' => $balance->amount];
+    }
+
+    public function test(): array
+    {
+        return [
+            'output' => 'hello'
+        ];
+    }
+
+    public function swap(): array
+    {
+
     }
 }

@@ -42,20 +42,20 @@ class NotifyLeo extends Command
      */
     public function handle()
     {
-//        $this->result = '';
-//        $this->updateNibiru();
-//        $this->updateLava();
-////        $this->updateExorde();
-//        $this->updateArchive();
-//
-//        if ($this->result != '') {
-//            $users = User::all();
-//            foreach ($users as $user) {
-//                $notification = new TelegramNotification();
-//                $notification->text = $this->result;
-//                $user->notify($notification);
-//            }
-//        }
+        $this->result = '';
+        $this->updateNibiru();
+        $this->updateLava();
+//        $this->updateExorde();
+        $this->updateArchive();
+
+        if ($this->result != '') {
+            $users = User::all();
+            foreach ($users as $user) {
+                $notification = new TelegramNotification();
+                $notification->text = $this->result;
+                $user->notify($notification);
+            }
+        }
     }
 
     public function updateNibiru()
