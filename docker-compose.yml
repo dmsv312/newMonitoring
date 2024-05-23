@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./www:/usr/share/nginx/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./log/nginx:/var/log/nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - node
+      - php
+  node:
+    build: ./docker/node
+    stdin_open: true
+    volumes:
+      - ./www/frontend:/usr/src/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - WDS_SOCKET_PORT=0
+  php:
+    build: ./docker/php
+    volumes:
+      - ./www/backend:/usr/share/nginx/html/backend
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql:8
+    command: --max_allowed_packet=1073741824 --general-log=1 --general-log-file=/var/log/mysql/general.log
+    environment:
+      MYSQL_DATABASE: swap
+      MYSQL_USER: swap
+      MYSQL_PASSWORD: QazWsxEdc_123
+      MYSQL_ROOT_PASSWORD: root
+    expose:
+      - 3306
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d
+      - ./log/mysql:/var/log/mysql
+      - ./db:/db
+    ports:
+      - "3306:3306"
+
+volumes:
+  mysqldata:
